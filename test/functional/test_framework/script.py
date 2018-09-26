@@ -7,13 +7,14 @@
 This file is modified from python-bitcoinlib.
 """
 
-from .messages import CTransaction, CTxOut, sha256, hash256, uint256_from_str, ser_uint256, ser_string
-
-from binascii import hexlify
 import hashlib
 import struct
+from binascii import hexlify
+
+from test_framework.util import fixed_attrs
 
 from .bignum import bn2vch
+from .messages import CTransaction, CTxOut, sha256, hash256, uint256_from_str, ser_uint256, ser_string
 
 MAX_SCRIPT_ELEMENT_SIZE = 520
 
@@ -361,8 +362,10 @@ class CScriptTruncatedPushDataError(CScriptInvalidError):
         self.data = data
         super(CScriptTruncatedPushDataError, self).__init__(msg)
 
+
 # This is used, eg, for blockchain heights in coinbase scripts (bip34)
-class CScriptNum():
+@fixed_attrs
+class CScriptNum:
     def __init__(self, d=0):
         self.value = d
 

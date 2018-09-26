@@ -569,3 +569,33 @@ def find_vout_for_address(node, txid, addr):
         if any([addr == a for a in tx["vout"][i]["scriptPubKey"]["addresses"]]):
             return i
     raise RuntimeError("Vout not found for address: txid=%s, addr=%s" % (txid, addr))
+
+
+def fixed_attrs(cls):
+    """
+    Class decorator that ensures no new attribute names can be assigned outside
+    of class attributes or those assigned during initialization.
+    """
+
+    original_init = cls.__init__
+
+    def new_init(self, *args, **kwargs):
+        original_init(self, *args, **kwargs)
+        if hasattr(self, '_initialized'):
+            self._initialized[cls] = True
+        else:
+            self._initialized = {cls: True}
+
+    def new_setattr(self, name, value):
+        initialized_by_class = getattr(self, '_initialized', {})
+        final_class_initialized = initialized_by_class.get(type(self), False)
+        if final_class_initialized and not hasattr(self, name):
+            raise AttributeError(
+                "AttributeError: '{}' object has no attribute '{}'".format(
+                    type(self).__name__, name))
+        else:
+            super(cls, self).__setattr__(name, value)
+
+    cls.__init__ = new_init
+    cls.__setattr__ = new_setattr
+    return cls
